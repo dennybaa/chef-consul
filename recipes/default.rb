@@ -18,8 +18,8 @@ consul_config_dir = node['consul']['host_config_dir']
 if advertise_on = node['consul']['advertise_on']
   advertise_addr = node['network']['interfaces'][advertise_on]['addresses'].
                     find {|addr, data| data['family'] == 'inet'}.first
-  advertise_addr ||= node['ipaddress']
 end
+advertise_addr ||= node['ipaddress']
 
 # Choose default arguments
 if node['consul']['agent_mode'].to_sym == :server
