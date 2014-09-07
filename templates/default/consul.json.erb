@@ -1,0 +1,18 @@
+{
+  "data_dir": "/data",
+  "client_addr": "0.0.0.0",
+  "domain": "consul",
+  "datacenter": "<%= @datacenter %>",
+  "ports": {
+    "dns": <%= node['consul']['dns_port'] %>
+  },
+  "recursor": "<%= node['consul']['dns_recursor'] %>",
+  "encrypt":  "<%= @encrypt_key %>",
+  "ca_file":  "/config/ca.crt",
+  "key_file": "/config/host.key",
+  "cert_file": "/config/host.crt",
+  "verify_incoming": true,
+  "verify_outgoing": true,
+  "advertise_addr": "<%= @advertise_addr %>",
+  "skip_leave_on_interrupt": true
+}

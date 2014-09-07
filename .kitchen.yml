@@ -1,0 +1,61 @@
+---
+driver_plugin: vagrant
+
+driver_config:
+  box: opscode-ubuntu-14.04
+  box_url: https://opscode-vm.s3.amazonaws.com/vagrant/opscode_ubuntu-14.04_provisionerless.box
+  require_chef_omnibus: true
+
+provisioner:
+  name: chef_solo
+
+platforms:
+  - name: leader
+    run_list:
+      - recipe[fig]
+      - recipe[selfpki]
+      - recipe[consul::server]
+    driver_config:
+      network:
+        - ['private_network', {ip: '192.168.33.31'}]
+  - name: beta
+    run_list:
+      - recipe[fig]
+      - recipe[selfpki]
+      - recipe[consul::server]
+    attributes:
+      consul:
+        bootstrap_args: "-join 192.168.33.31"
+    driver_config:
+      network:
+        - ['private_network', {ip: '192.168.33.32'}]
+  - name: gamma
+    run_list:
+      - recipe[fig]
+      - recipe[selfpki]
+      - recipe[consul::server]
+    attributes:
+      consul:
+        bootstrap_args: "-join 192.168.33.31"
+    driver_config:
+      network:
+        - ['private_network', {ip: '192.168.33.33'}]
+  - name: client
+    run_list:
+      - recipe[fig]
+      - recipe[selfpki]
+      - recipe[consul::client]
+    attributes:
+      consul:
+        bootstrap_args: "-join 192.168.33.31"
+    driver_config:
+      network:
+        - ['private_network', {ip: '192.168.33.34'}]
+
+suites:
+  - name: consul
+    run_list: []
+    attributes:
+      consul:
+        advertise_on:  "eth1"
+        encrypt_key:   "sdqzBenhcvAj0gPrndI4/A=="

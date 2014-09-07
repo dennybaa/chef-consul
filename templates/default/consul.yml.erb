@@ -1,0 +1,17 @@
+consul:
+  hostname: <%= node['hostname'] %>
+  image: dennybaa/consul
+  command: <%= @cmd_args %>
+  environment:
+    GOMAXPROCS: <%= node['consul']['gomaxprocs'] %>
+  ports:
+    - "<%= @advertise_addr %>:8400:8400" # rpc endpoint
+    - "<%= @advertise_addr %>:8301:8301" # serf_lan
+    - "<%= @advertise_addr %>:8301:8301/udp"
+    - "<%= @advertise_addr %>:8302:8302" # serf_wan
+    - "<%= @advertise_addr %>:8300:8300" # server rpc
+    - "<%= @advertise_addr %>:8300:8300/udp"
+    - "<%= @advertise_addr %>:8500:8500" # REST
+    - "<%= @advertise_addr %>:53:53/udp" # consul DNS
+  volumes:
+    - <%= node['consul']['host_config_dir'] %>:/config
