@@ -12,7 +12,21 @@ include_recipe 'selfpki'
 include_recipe 'runit'
 
 default_args = []
-consul_config_dir = node['consul']['host_config_dir']
+
+[
+  node['consul']['host_config_dir']
+].each do |dir|
+consul_config_dir = 
+
+directory consul_config_dir do
+  owner 'root'
+  group 'root'
+  mode  00755
+  recursive true
+  action :create
+end
+
+
 
 # Choose the address where consul will be advertised
 if advertise_on = node['consul']['advertise_on']
@@ -28,14 +42,8 @@ if node['consul']['agent_mode'].to_sym == :server
   default_args << '-ui-dir /ui' if node['consul']['ui_enabled']
 end
 
-directory consul_config_dir do
-  owner 'root'
-  group 'root'
-  mode  00755
-  action :create
-end
 
-template "#{consul_config_dir}/consul.json" do
+template "#{node['consul']['host_config_dir']}/consul.json" do
   source 'consul.json.erb'
   owner  'root'
   group  'root'
@@ -47,6 +55,8 @@ template "#{consul_config_dir}/consul.json" do
   })
 end
 
+# Create host certificate and write ca.crt from cookbook
+
 node.default['selfpki']['openssl_cnf_cookbook'] = 'consul'
 
 if node['consul']['ca']['cookbook'] == 'consul'
@@ -57,13 +67,15 @@ selfpki 'consul' do
   cookbook node['consul']['ca']['cookbook']
   config   node['consul']['ca']['config']
 
-  key_path  "#{consul_config_dir}/host.key"
-  cert_path "#{consul_config_dir}/host.crt"
+  key_path  "#{node['consul']['host_config_dir']}/host.key"
+  cert_path "#{node['consul']['host_config_dir']}/host.crt"
 
   server_cert(node['consul']['agent_mode'] == :server)
 end
 
-cookbook_file "#{consul_config_dir}/ca.crt" do
+cookbook_file "#{node['consul']['host_config_dir']}/ca.crt" do
+  cookbook node['consul']['ca']['cookbook']
+
   source 'ca.crt'
   owner  'root'
   group  'root'

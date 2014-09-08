@@ -15,3 +15,4 @@ consul:
     - "<%= @advertise_addr %>:53:53/udp" # consul DNS
   volumes:
     - <%= node['consul']['host_config_dir'] %>:/config
+    - <%= node['consul']['host_data_dir'] %>:/data

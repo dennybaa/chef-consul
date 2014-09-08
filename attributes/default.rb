@@ -1,6 +1,7 @@
 default['consul']['bootstrap_expect'] = 3
 default['consul']['bootstrap_args']  = ""
-default['consul']['host_config_dir'] = "/var/lib/consul-config"
+default['consul']['host_config_dir'] = "/var/lib/consul/config"
+default['consul']['host_data_dir']   = "/var/lib/consul/data"
 default['consul']['encrypt_key']     = nil
 default['consul']['gomaxprocs']      = node['cpu']['total'] > 1 ? 3 : 2
 default['consul']['advertise_on']    = nil
