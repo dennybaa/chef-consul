@@ -14,18 +14,19 @@ include_recipe 'runit'
 default_args = []
 
 [
-  node['consul']['host_config_dir']
+  node['consul']['host_config_dir'],
+  node['consul']['host_data_dir'],
 ].each do |dir|
-consul_config_dir = 
 
-directory consul_config_dir do
-  owner 'root'
-  group 'root'
-  mode  00755
-  recursive true
-  action :create
+  directory dir do
+    owner 'root'
+    group 'root'
+    mode  00755
+    recursive true
+    action :create
+  end
+
 end
-
 
 
 # Choose the address where consul will be advertised
