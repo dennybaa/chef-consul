@@ -3,6 +3,11 @@
 
 exec 2>&1
 
+# Flush conntrack table, since after restart packets
+# are still routed to to container's stale ip address.
+# This affects virtualbox environments and maybe others.
+conntrack -F
+
 fig -p default -f /etc/fig.d/consul up -d --no-recreate
 container_id=$(fig -p default -f /etc/fig.d/consul ps -q)
 exec docker attach $container_id

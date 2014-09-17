@@ -2,6 +2,8 @@ include_recipe 'fig'
 include_recipe 'selfpki'
 include_recipe 'runit'
 
+package 'conntrack'
+
 [
   node['consul']['host_config_dir'],
   node['consul']['host_data_dir'],
