@@ -1,17 +1,6 @@
-#
-# Cookbook Name:: consul
-# Recipe:: default
-#
-# Copyright (C) 2014 Twiket LTD
-#
-# All rights reserved - Do Not Redistribute
-#
-
 include_recipe 'fig'
 include_recipe 'selfpki'
 include_recipe 'runit'
-
-default_args = []
 
 [
   node['consul']['host_config_dir'],
@@ -36,11 +25,13 @@ if advertise_on = node['consul']['advertise_on']
 end
 advertise_addr ||= node['ipaddress']
 
+
 # Choose default arguments
+server_args = []
 if node['consul']['agent_mode'].to_sym == :server
-  default_args << '-server'
-  default_args << "-bootstrap-expect #{node['consul']['bootstrap_expect']}"
-  default_args << '-ui-dir /ui' if node['consul']['ui_enabled']
+  server_args << '-server'
+  server_args << "-bootstrap-expect #{node['consul']['bootstrap_expect']}"
+  server_args << '-ui-dir /ui' if node['consul']['ui_enabled']
 end
 
 
@@ -83,35 +74,47 @@ cookbook_file "#{node['consul']['host_config_dir']}/ca.crt" do
   mode   00644
 end
 
-# Perform bootstrap run
-unless (bootstrap_args = Array(node['consul']['bootstrap_args'])).empty?
+# Create consul fig environment and start consul
+fig 'consul' do
+  source 'consul.yaml.erb'
 
-  fig 'consul-bootstrap-run' do
-    action :up
-    single_pass true
+  variables({
+    cmd_args: server_args.join(' '),
+    advertise_addr: advertise_addr
+  })
 
-    source 'consul.yml.erb'
+  not_if { ::File.exist? '/etc/fig.d/consul' }
+end
 
-    variables({
-      cmd_args: (default_args + bootstrap_args).join(' '),
-      advertise_addr: advertise_addr
+# We are about to be bootstrapped, so consul environment file doesn't exist.
+# Initiate one-off command to join consul cluster.
+unless ::File.exist? '/etc/fig.d/consul'
+
+  join_args = []
+  join_to = Array(node['consul']['join_servers'])
+
+  if join_to.empty?
+    Chef::Log.warn "Join server list is empty, brining up a standalone server"
+  end  
+
+  join_args << '-wan' if node['consul']['join_wan']
+  join_args << "-rpc-addr=#{advertise_addr}:8400"
+
+  fig 'join consul cluster' do
+    action :run
+    source 'consul.yaml.erb'
+    service 'consul'
+
+    variables(cmd_args: server_args.join(' '))
+    run_opts({
+      entrypoint: '/bin/consul',
+      command: %Q(join #{join_args.join(' ')}  #{join_to.join(' ')})
     })
-
-    # fig is already bootstrapped if default config exists
-    not_if { ::File.exist? '/etc/fig.d/default_consul' }
   end
 
 end
 
-fig 'consul' do
-  action :up
-  source 'consul.yml.erb'
-
-  variables(cmd_args: default_args.join(' '), advertise_addr: advertise_addr)
-end
-
-# We don't start runit service, since it's already up
+# start runit service
 runit_service "consul" do
   action :enable
-  restart_on_update false
 end

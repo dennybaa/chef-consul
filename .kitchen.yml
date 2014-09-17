@@ -25,7 +25,7 @@ platforms:
       - recipe[consul::server]
     attributes:
       consul:
-        bootstrap_args: "-join 192.168.33.31"
+        join_servers: [ "192.168.33.31" ]
     driver_config:
       network:
         - ['private_network', {ip: '192.168.33.32'}]
@@ -36,7 +36,7 @@ platforms:
       - recipe[consul::server]
     attributes:
       consul:
-        bootstrap_args: "-join 192.168.33.31"
+        join_servers: [ "192.168.33.31" ]
     driver_config:
       network:
         - ['private_network', {ip: '192.168.33.33'}]
@@ -47,7 +47,7 @@ platforms:
       - recipe[consul::client]
     attributes:
       consul:
-        bootstrap_args: "-join 192.168.33.31"
+        join_servers: [ "192.168.33.31" ]
     driver_config:
       network:
         - ['private_network', {ip: '192.168.33.34'}]
