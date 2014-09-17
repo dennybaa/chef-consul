@@ -88,17 +88,16 @@ fig 'consul' do
   not_if { ::File.exist? '/etc/fig.d/consul' }
 end
 
+join_args = []
+join_to = Array(node['consul']['join_servers'])
+
+if join_to.empty?
+  Chef::Log.warn "Join server list is empty, brining up a standalone server"
+end  
+
 # We are about to be bootstrapped, so consul environment file doesn't exist.
 # Initiate one-off command to join consul cluster.
-unless ::File.exist? '/etc/fig.d/consul'
-
-  join_args = []
-  join_to = Array(node['consul']['join_servers'])
-
-  if join_to.empty?
-    Chef::Log.warn "Join server list is empty, brining up a standalone server"
-  end  
-
+unless join_to.empty? || ::File.exist?('/etc/fig.d/consul')
   join_args << '-wan' if node['consul']['join_wan']
   join_args << "-rpc-addr=#{advertise_addr}:8400"
 
@@ -113,7 +112,6 @@ unless ::File.exist? '/etc/fig.d/consul'
       command: %Q(join #{join_args.join(' ')}  #{join_to.join(' ')})
     })
   end
-
 end
 
 # start runit service
